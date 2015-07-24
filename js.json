@@ -1,0 +1,20 @@
+{
+  "id" : "js",
+  "version" : "0.0.1",
+  "description": "Javascript support for gauge",
+  "run": {
+    "windows": ["index.js", "--start"],
+    "linux": ["./index.js", "--start"],
+    "darwin": ["./index.js", "--start"]
+  },
+  "init": {
+    "windows": ["index.js", "--init"],
+    "linux": ["./index.js", "--init"],
+    "darwin": ["./index.js", "--init"]
+  },
+  "lib": "libs",
+  "gaugeVersionSupport": {
+    "minimum": "0.0.5",
+    "maximum": ""
+  }
+}
