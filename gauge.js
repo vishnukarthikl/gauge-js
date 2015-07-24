@@ -3,6 +3,8 @@
 var ProtoBuf = require("protobufjs");
 var ByteBuffer = require("bytebuffer");
 var flags = require("flags");
+var messageProcessor = require("./message-processor");
+var steps = require("./steps");
 
 var builder = ProtoBuf.loadProtoFile("gauge-proto/messages.proto");
 var message = builder.build("gauge.messages.Message");
@@ -11,22 +13,15 @@ flags.defineBoolean('init');
 flags.defineBoolean('start');
 flags.parse();
 
+module.exports.step = function (steptext, callback) {
+    steps[steptext] = callback;
+};
+require('./step_implementation');
+
 
 if (isInit()) {
     console.log("init");
 } else if (isStart()) {
-    var messageProcessor = {};
-    messageProcessor[message.MessageType.StepNamesRequest] = function (request) {
-        return request;
-    };
-    messageProcessor[message.MessageType.StepValidateRequest] = function (request) {
-        return new message({
-            messageId: request.messageId, messageType: message.MessageType.StepValidateResponse, stepValidateResponse: {
-                isValid: true
-            }
-        });
-    };
-
     var socket = require('net').Socket();
     socket.connect(process.env.GAUGE_INTERNAL_PORT, 'localhost');
     socket.on('data', function (d) {
@@ -34,13 +29,13 @@ if (isInit()) {
         var messageLength = bb.readVarint64(0);
 
         // Take the remaining part as the actual message
-        var data = d.slice(messageLength.length, messageLength.value.low + 1);
+        var data = d.slice(messageLength.length, messageLength.value.low + messageLength.length);
         var request = message.decode(data);
         if (request.messageType == message.MessageType.KillProcessRequest) {
             writeResponse(socket, request);
             socket.end();
         } else {
-            var response = messageProcessor[request.messageType](request);
+            var response = messageProcessor.process(request);
             writeResponse(socket, response);
         }
     });
