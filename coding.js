@@ -2,14 +2,24 @@ var ByteBuffer = require("bytebuffer");
 var ProtoBuf = require("protobufjs");
 var builder = ProtoBuf.loadProtoFile("gauge-proto/messages.proto");
 var message = builder.build("gauge.messages.Message");
+var apiBuilder = ProtoBuf.loadProtoFile("gauge-proto/api.proto");
+var apiMessage = apiBuilder.build("gauge.messages.APIMessage");
 
-var decode = function (bytes) {
+function extractPayload(bytes) {
     var byteBuffer = ByteBuffer.wrap(bytes);
     var messageLength = byteBuffer.readVarint64(0);
 
     // Take the remaining part as the actual message
-    var data = bytes.slice(messageLength.length, messageLength.value.low + messageLength.length);
+    return bytes.slice(messageLength.length, messageLength.value.low + messageLength.length);
+}
+var decodeMessage = function (bytes) {
+    var data = extractPayload(bytes);
     return message.decode(data);
+};
+
+var decodeAPI = function (bytes) {
+    var data = extractPayload(bytes);
+    return apiMessage.decode(data);
 };
 
 var encode = function (data) {
@@ -23,6 +33,7 @@ var encode = function (data) {
 };
 
 module.exports = {
-    decode: decode,
+    decodeMessage: decodeMessage,
+    decodeAPI: decodeAPI,
     encode: encode
 };

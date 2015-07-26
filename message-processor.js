@@ -79,7 +79,10 @@ function executeStep(request) {
     var response = null;
     if (stepImpl) {
         try {
-            var args = request.executeStepRequest.parameters;
+            //todo: check for tables
+            var args = request.executeStepRequest.parameters.map(function (x) {
+                return x.value
+            });
             if (args.length == 0)
                 stepImpl();
             else

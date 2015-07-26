@@ -4,7 +4,8 @@ var ProtoBuf = require("protobufjs");
 var ByteBuffer = require("bytebuffer");
 var flags = require("flags");
 var steps = require("./steps");
-var ExecutionConnection = require("./connection");
+var ExecutionConnection = require("./connection").ExecutionConnection;
+var apiConnection = (new (require("./connection")).ApiConnection('localhost',process.env.GAUGE_API_PORT));
 var builder = ProtoBuf.loadProtoFile("gauge-proto/messages.proto");
 var message = builder.build("gauge.messages.Message");
 
@@ -13,7 +14,9 @@ flags.defineBoolean('start');
 flags.parse();
 
 module.exports.step = function (steptext, callback) {
-    steps[steptext] = callback;
+    apiConnection.sendStepValueRequest(steptext, function(stepValueResponse) {
+        steps[stepValueResponse.stepValue] = callback;
+    });
 };
 require('./step_implementation');
 

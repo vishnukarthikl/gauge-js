@@ -17,7 +17,7 @@ describe('coding', function () {
                 }
             });
             var encoded = coding.encode(executeMessage);
-            var actualMessage = coding.decode(encoded);
+            var actualMessage = coding.decodeMessage(encoded);
             assert.deepEqual(actualMessage.messageId, executeMessage.messageId);
             assert.deepEqual(actualMessage.messageType, executeMessage.messageType);
             assert.deepEqual(actualMessage.executeStepRequest.actualStepText,executeMessage.executeStepRequest.actualStepText);

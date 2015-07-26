@@ -1,5 +1,5 @@
 var gauge = require("./gauge");
 
-gauge.step("test step", function () {
-    console.log("inside step implementation");
+gauge.step("say <greeting> to <person>", function (greeting, person) {
+    console.log(greeting + "!!! " + person);
 });
