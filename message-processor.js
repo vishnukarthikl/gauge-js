@@ -4,6 +4,7 @@ var ProtoBuf = require("protobufjs");
 var builder = ProtoBuf.loadProtoFile("gauge-proto/messages.proto");
 var message = builder.build("gauge.messages.Message");
 var steps = require("./steps");
+var Table = require("./table");
 
 var messageProcessor = function () {
     var processors = {};
@@ -79,9 +80,11 @@ function executeStep(request) {
     var response = null;
     if (stepImpl) {
         try {
-            //todo: check for tables
-            var args = request.executeStepRequest.parameters.map(function (x) {
-                return x.value
+            var args = request.executeStepRequest.parameters.map(function (p) {
+                if (p.table) {
+                    return new Table(p.table);
+                }
+                return p.value
             });
             if (args.length == 0)
                 stepImpl();
