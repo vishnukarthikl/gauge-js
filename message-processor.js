@@ -78,6 +78,7 @@ function validateStep(request) {
 function executeStep(request) {
     var stepImpl = steps[request.executeStepRequest.parsedStepText];
     var response = null;
+    var startTime = new Date();
     if (stepImpl) {
         try {
             var args = request.executeStepRequest.parameters.map(function (p) {
@@ -97,7 +98,7 @@ function executeStep(request) {
                 executionStatusResponse: {
                     executionResult: {
                         failed: false,
-                        executionTime: 0
+                        executionTime: ((new Date() - startTime))
                     }
                 }
             });
@@ -109,12 +110,12 @@ function executeStep(request) {
                 executionStatusResponse: {
                     executionResult: {
                         failed: true,
-                        executionTime: 0
+                        executionTime: ((new Date() - startTime))
                     }
                 }
             });
             if (e.stack) {
-                response.executeStepResponse.stackTrace = e.stack;
+                response.executionStatusResponse.executionResult.stackTrace = e.stack;
             }
         }
     }
