@@ -38,16 +38,7 @@ function doNothing(request) {
 }
 
 function successExecutionStatus(request) {
-    return new message({
-        messageId: request.messageId,
-        messageType: message.MessageType.ExecutionStatusResponse,
-        executionStatusResponse: {
-            executionResult: {
-                failed: false,
-                executionTime: 0
-            }
-        }
-    });
+    return executionResponse(false, 0, request.messageId);
 }
 
 function validateStep(request) {
@@ -79,6 +70,11 @@ function executeStep(request) {
     var stepImpl = steps[request.executeStepRequest.parsedStepText];
     var response = null;
     var startTime = new Date();
+
+    function addStackTrace(executionResponse, stacktrace) {
+        executionResponse.executionStatusResponse.executionResult.stackTrace = stacktrace;
+    }
+
     if (stepImpl) {
         try {
             var args = request.executeStepRequest.parameters.map(function (p) {
@@ -92,38 +88,32 @@ function executeStep(request) {
             else
                 stepImpl.apply(this, args);
 
-            response = new message({
-                messageId: request.messageId,
-                messageType: message.MessageType.ExecutionStatusResponse,
-                executionStatusResponse: {
-                    executionResult: {
-                        failed: false,
-                        executionTime: ((new Date() - startTime))
-                    }
-                }
-            });
+            response = executionResponse(false, (new Date() - startTime), request.messageId)
         }
         catch (e) {
-            response = new message({
-                messageId: request.messageId,
-                messageType: message.MessageType.ExecutionStatusResponse,
-                executionStatusResponse: {
-                    executionResult: {
-                        failed: true,
-                        executionTime: ((new Date() - startTime))
-                    }
-                }
-            });
+            response = executionResponse(true, (new Date() - startTime), request.messageId);
             if (e.stack) {
-                response.executionStatusResponse.executionResult.stackTrace = e.stack;
+                addStackTrace(response, e.stack);
             }
         }
     }
     else {
         console.log("step not implemented");
     }
-
     return response;
+}
+
+function executionResponse(isFailed, executionTime, messageId) {
+    return new message({
+        messageId: messageId,
+        messageType: message.MessageType.ExecutionStatusResponse,
+        executionStatusResponse: {
+            executionResult: {
+                failed: isFailed,
+                executionTime: executionTime
+            }
+        }
+    });
 }
 
 module.exports = messageProcessor;
